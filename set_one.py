@@ -1,7 +1,7 @@
 import binascii
 import base64
 import string
-from Crypto.Util.strxor import strxor_c
+from itertools import cycle, izip
 
 ### Challenge 1
 def hexToBase64(hex):
@@ -74,15 +74,15 @@ def score(s):
 
 
 def string_xor(s, c):
-     c = ord(c)  # dirty dynamic typing
+     c = ord(c)
      return ''.join(map(lambda h: chr(ord(h) ^ c), s))
 
 
-def singleByeteXOR(str):
+def singleByteXOR(str):
     str = binascii.unhexlify(str)
     results = []
     for letter in string.ascii_letters:
-        result = string_xor(s, letter)
+        result = string_xor(str, letter)
         results.append(result)
     max = score(results[1])
     final = 1
@@ -90,10 +90,34 @@ def singleByeteXOR(str):
         if score(i) > max:
             max = score(i)
             final = i
-    return final
-    # print final
+    return max, final
 
-# singleByeteXOR("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
-
+# test = singleByteXOR("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+# print test[0]
 
 ### Challenge 4
+def findSingleByteXOR(file):
+    # results = []
+    with open(str(file), "rb") as file:
+        results = [l.strip() for l in file]
+    max = 0
+    index = 0
+    counter = 0
+    for i in results:
+        counter += 1
+        result = singleByteXOR(i)
+        if result[0] > max:
+            max = result[0]
+            index = counter
+    print results[index]
+
+# findSingleByteXOR("input_challenge4.txt")
+
+
+### Challenge 5
+def repeatingKeyXOR(str, key):
+    xored = ''.join(chr(ord(c)^ord(k)) for c,k in izip(str, cycle(key)))
+    encoded = binascii.hexlify(xored).decode('ascii')
+    print encoded
+
+repeatingKeyXOR("Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal", "ICE")
