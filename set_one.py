@@ -140,7 +140,20 @@ def normalizedHammingDistances(input):
 
 def breakRepeatingKeyXOR(file):
     input = bytes("".join(list(open(file, "r"))).decode("base64"))
-    KEYSIZE = normalizedHammingDistances(input)[0][1]
-    return KEYSIZE
+    for KEYSIZE in normalizedHammingDistances(input)[:4]:
+        blocks = [[] for _ in range(KEYSIZE[0])]
+        for i, byte in enumerate(input):
+            blocks[i % KEYSIZE[0]].append(byte)
 
-print breakRepeatingKeyXOR("input_challenge6.txt")
+        keys = ""
+        for bbytes in blocks:
+            keys += singleByteXOR(bytearray(bbytes))[0]
+
+        key = bytearray(keys * len(input))
+        text = bytes(XOR(bytearray(input), key))
+
+        print keys
+        print KEYSIZE[0]
+        print text
+
+# breakRepeatingKeyXOR("input_challenge6.txt")
