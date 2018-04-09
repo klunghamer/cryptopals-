@@ -1,6 +1,4 @@
-import binascii
 import base64
-from itertools import cycle, izip
 
 ### Challenge 1
 def hexToBase64(hex):
@@ -126,34 +124,23 @@ def findHammingDistance(str1, str2):
             count += 1
         i += 1
     return count
-# print findHammingDistance("this is a test", "wokka wokka!!!")
+
+def normalizedHammingDistances(input):
+    distances = []
+    for i in range(2, 40):
+        s1 = input[:i]
+        s2 = input[i:i*2]
+        s3 = input[i*2:i*3]
+        s4 = input[i*3:i*4]
+
+        distance = (1.0*(findHammingDistance(s1, s2) + findHammingDistance(s2, s3) + findHammingDistance(s3, s4))/(i*3))
+        distances.append((i, distance))
+    return sorted(distances, key=lambda x:x[1])
 
 
 def breakRepeatingKeyXOR(file):
-    input = base64.b64decode(open(file, 'r').read())
-    print input
+    input = bytes("".join(list(open(file, "r"))).decode("base64"))
+    KEYSIZE = normalizedHammingDistances(input)[0][1]
+    return KEYSIZE
 
-x = base64.b64decode(open('input_challenge6.txt', 'r').read())
-# print x
-
-str1 = x[0:7]
-str2 = x[8:15]
-# print str1
-# print str2
-
-# print findHammingDistance(str1, str2)
-
-def normalizedHammingDistance(input, KEYSIZE):
-    sum = 0
-    for i in range(len(input)/(KEYSIZE-1)):
-        sum = findHammingDistance(input[(i+0)*KEYSIZE:(i+1)*KEYSIZE], input[(i+1)*KEYSIZE:(i+2)*KEYSIZE])
-    average = (1.0*sum)/len(input)/(KEYSIZE-1)
-    normalized = average/KEYSIZE
-    print normalized
-
-    # distance = findHammingDistance(str1, str2)
-    # normalized = (distance * 1.0)/len(str1)
-    # return normalized
-
-# normalizedHammingDistance("this is a testwokka wokka!!!", 14)
-# print 37.0/14
+print breakRepeatingKeyXOR("input_challenge6.txt")
