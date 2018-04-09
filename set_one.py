@@ -1,40 +1,40 @@
 import binascii
 import base64
-import string
 from itertools import cycle, izip
 
 ### Challenge 1
 def hexToBase64(hex):
-    decoded = binascii.unhexlify(hex)
-    return base64.b64encode(decoded).decode('ascii')
-    # print base64.b64encode(decoded).decode('ascii')
+    decoded = hex.decode("hex")
+    return decoded.encode("base64")
 # hexToBase64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")
 
 
 ### Challenge 2
-def toHex(str):
+def rawToHex(str):
     hex = str.encode("hex")
     return hex
-    # print hex
 
-def hexToRaw(str):
-    raw = str.decode("hex")
+def hexToRaw(bytes):
+    raw = bytes.decode("hex")
     return raw
 
-def XORHex(str1, str2):
-    str1 = hexToRaw(str1)
-    str2 = hexToRaw(str2)
-    result = ''
+def XOR(str1, str2):
+    result = bytearray(len(str1))
+    for i in range(len(str1)):
+        result[i] = str1[i] ^ str2[i]
+    return result
 
-    for x,y in zip(str1,str2):
-        result += chr(ord(x) ^ ord(y))
-    return toHex(result)
+def XORHex(str1, str2):
+    str1 = bytearray(hexToRaw(str1))
+    str2 = bytearray(hexToRaw(str2))
+    result = XOR(str1, str2)
+    result = rawToHex(bytes(result))
+    return result
 # XORHex("1c0111001f010100061a024b53535009181c", "686974207468652062756c6c277320657965")
 
 
 ### Challenge 3
-
-freqs = {
+frequencyTable = {
     'a': 0.0651738,
     'b': 0.0124248,
     'c': 0.0217339,
@@ -64,60 +64,96 @@ freqs = {
     ' ': 0.1918182
 }
 
-def score(s):
-    score = 0
-    for i in s:
-        c = i.lower()
-        if c in freqs:
-            score += freqs[c]
-    return score
-
-
-def string_xor(s, c):
-     c = ord(c)
-     return ''.join(map(lambda h: chr(ord(h) ^ c), s))
-
+def score(str):
+    total = 0
+    for i in str.lower():
+        if i in frequencyTable:
+            total += frequencyTable[i]
+    return total
 
 def singleByteXOR(str):
-    str = binascii.unhexlify(str)
-    results = []
-    for letter in string.ascii_letters:
-        result = string_xor(str, letter)
-        results.append(result)
-    max = score(results[1])
-    final = 1
-    for i in results:
-        if score(i) > max:
-            max = score(i)
-            final = i
-    return max, final
+    max = 0
+    for i in range(256):
+        testStr = len(str) * [i]
+        xored = bytes(XOR(str, testStr))
+        totalScore = score(xored)
+        if totalScore > max:
+            max = totalScore
+            final = xored
+            char = chr(i)
+    return char, final
+# print singleByteXOR(bytearray.fromhex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"))
 
-# test = singleByteXOR("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
-# print test[0]
 
 ### Challenge 4
 def findSingleByteXOR(file):
-    # results = []
-    with open(str(file), "rb") as file:
-        results = [l.strip() for l in file]
     max = 0
-    index = 0
-    counter = 0
-    for i in results:
-        counter += 1
-        result = singleByteXOR(i)
-        if result[0] > max:
-            max = result[0]
-            index = counter
-    print results[index]
+    for line in open("input_challenge4.txt", "rb"):
+        line = line.strip()
+        str = bytearray.fromhex(line)
 
-# findSingleByteXOR("input_challenge4.txt")
+        for i in range(256):
+            testStr = len(str) * [i]
+            xored = bytes(XOR(str, testStr))
+            totalScore = score(xored)
+            if totalScore > max:
+                max = totalScore
+                final = xored
+                char = chr(i)
+    return char, final
+# print findSingleByteXOR("input_challenge4.txt")
 
 
 ### Challenge 5
 def repeatingKeyXOR(str, key):
-    xored = ''.join(chr(ord(c)^ord(k)) for c,k in izip(str, cycle(key)))
-    encoded = binascii.hexlify(xored).decode('ascii')
-    print encoded
+    repeatedKey = bytearray("ICE" * len(str))
+    xoredText = bytes(XOR(bytearray(str), repeatedKey))
+    return xoredText.encode("hex")
+# print repeatingKeyXOR("Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal", "ICE")
 
-repeatingKeyXOR("Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal", "ICE")
+
+### Challenge 6
+def strToBinary(str):
+    return ''.join(format(ord(x), '08b') for x in str)
+
+def findHammingDistance(str1, str2):
+    i = 0
+    count = 0
+    x = strToBinary(str1)
+    y = strToBinary(str2)
+    while i < len(x):
+        if x[i] != y[i]:
+            count += 1
+        i += 1
+    return count
+# print findHammingDistance("this is a test", "wokka wokka!!!")
+
+
+def breakRepeatingKeyXOR(file):
+    input = base64.b64decode(open(file, 'r').read())
+    print input
+
+x = base64.b64decode(open('input_challenge6.txt', 'r').read())
+# print x
+
+str1 = x[0:7]
+str2 = x[8:15]
+# print str1
+# print str2
+
+# print findHammingDistance(str1, str2)
+
+def normalizedHammingDistance(input, KEYSIZE):
+    sum = 0
+    for i in range(len(input)/(KEYSIZE-1)):
+        sum = findHammingDistance(input[(i+0)*KEYSIZE:(i+1)*KEYSIZE], input[(i+1)*KEYSIZE:(i+2)*KEYSIZE])
+    average = (1.0*sum)/len(input)/(KEYSIZE-1)
+    normalized = average/KEYSIZE
+    print normalized
+
+    # distance = findHammingDistance(str1, str2)
+    # normalized = (distance * 1.0)/len(str1)
+    # return normalized
+
+# normalizedHammingDistance("this is a testwokka wokka!!!", 14)
+# print 37.0/14
