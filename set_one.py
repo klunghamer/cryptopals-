@@ -1,4 +1,4 @@
-import base64
+from Crypto.Cipher import AES
 
 ### Challenge 1
 def hexToBase64(hex):
@@ -155,5 +155,13 @@ def breakRepeatingKeyXOR(file):
         print keys
         print KEYSIZE[0]
         print text
-
 # breakRepeatingKeyXOR("input_challenge6.txt")
+
+
+### Challenge 7
+def AESinCEB(file, key):
+    input = bytes("".join(list(open(file, "r"))).decode("base64"))
+    cipher = AES.new(key, AES.MODE_ECB)
+    result = cipher.decrypt(input)
+    return result
+# print AESinCEB("input_challenge7.txt", "YELLOW SUBMARINE")
