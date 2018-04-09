@@ -165,3 +165,7 @@ def AESinCEB(file, key):
     result = cipher.decrypt(input)
     return result
 # print AESinCEB("input_challenge7.txt", "YELLOW SUBMARINE")
+
+
+### Challenge 8
+def xs
