@@ -1,4 +1,5 @@
 from Crypto.Cipher import AES
+from collections import defaultdict
 
 ### Challenge 1
 def hexToBase64(hex):
@@ -168,4 +169,18 @@ def AESinCEB(file, key):
 
 
 ### Challenge 8
-def xs
+def isECB(input, block_size):
+  block_count = len(input)/block_size
+  for i in range(block_count):
+    for j in range(i+1,block_count):
+      if input[i*block_size:(i+1)*block_size] == input[j*block_size:(j+1)*block_size]:
+        return True
+  return False
+
+def findECB(file):
+    blockSize = 16
+    for line in open(file, "r"):
+      line = line.strip()
+      if isECB(hexToRaw(line), blockSize):
+          return line
+print findECB("input_challenge8.txt")
