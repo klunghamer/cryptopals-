@@ -183,4 +183,4 @@ def findECB(file):
       line = line.strip()
       if isECB(hexToRaw(line), blockSize):
           return line
-print findECB("input_challenge8.txt")
+# print findECB("input_challenge8.txt")
